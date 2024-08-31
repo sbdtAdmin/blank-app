@@ -58,12 +58,18 @@ scanner_html = """
 
         navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
             videoElement.srcObject = stream;
+        }).catch((err) => {
+            console.error("Ошибка доступа к камере: ", err);
         });
 
         codeReader.decodeFromVideoDevice(undefined, 'video', (result, err) => {
             if (result) {
+                console.log("Штрих-код найден: ", result.text);
                 document.getElementById('barcode').value = result.text;
                 document.forms[0].submit();
+            }
+            if (err) {
+                console.error("Ошибка при сканировании штрих-кода: ", err);
             }
         });
     </script>
@@ -78,3 +84,5 @@ components.html(scanner_html, height=500)
 barcode_data = st.experimental_get_query_params().get('barcode', [''])[0]
 if barcode_data:
     st.write(f"Отсканированный штрих-код: {barcode_data}")
+else:
+    st.write("Штрих-код не распознан. Попробуйте еще раз.")
