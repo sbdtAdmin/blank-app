@@ -68,7 +68,7 @@ scanner_html = """
 """
 
 # Встраивание HTML с камерой на страницу Streamlit
-components.html(scanner_html, height=500)
+components.html(scanner_html, height=500, unsafe_allow_html=True)
 
 # Получение сообщения от JavaScript
 barcode = st.empty()
@@ -82,7 +82,7 @@ components.html("""
         }
     });
 </script>
-""", height=0)
+""", height=0, unsafe_allow_html=True)
 
 # Встраиваемая функция для приема штрих-кода через JavaScript
 st.markdown("""
@@ -95,7 +95,7 @@ st.markdown("""
         }
     });
 </script>
-""")
+""", unsafe_allow_html=True)
 
 # Вывод штрих-кода на страницу
 barcode_data = st.experimental_get_query_params().get('data', [''])[0]
