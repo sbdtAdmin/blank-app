@@ -48,6 +48,9 @@ scanner_html = """
         <video id="video" autoplay></video>
         <div id="scanner-overlay"></div>
     </div>
+    <form action="" method="GET">
+        <input type="hidden" name="barcode" id="barcode">
+    </form>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script>
         const codeReader = new ZXing.BrowserBarcodeReader();
@@ -59,7 +62,8 @@ scanner_html = """
 
         codeReader.decodeFromVideoDevice(undefined, 'video', (result, err) => {
             if (result) {
-                window.parent.postMessage({ type: 'barcode', data: result.text }, '*');
+                document.getElementById('barcode').value = result.text;
+                document.forms[0].submit();
             }
         });
     </script>
@@ -70,35 +74,7 @@ scanner_html = """
 # Встраивание HTML с камерой на страницу Streamlit
 components.html(scanner_html, height=500)
 
-# Получение сообщения от JavaScript
-barcode = st.empty()
-
-components.html("""
-<script>
-    window.addEventListener('message', (event) => {
-        if (event.data.type === 'barcode') {
-            const barcodeData = event.data.data;
-            const streamlitData = JSON.stringify({data: barcodeData});
-            fetch("/record_barcode", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: streamlitData
-            });
-        }
-    });
-</script>
-""", height=0)
-
-# Запрос POST для получения штрих-кода
-import json
-from streamlit.components.v1 import components
-
-def record_barcode():
-    st.write(st.experimental_get_query_params())
-
-components.serve_request_path('/record_barcode', record_barcode)
-
-# Вывод штрих-кода на страницу
-barcode_data = st.experimental_get_query_params().get('data', [''])[0]
+# Получение данных из формы
+barcode_data = st.experimental_get_query_params().get('barcode', [''])[0]
 if barcode_data:
-    barcode.text(f"Отсканированный штрих-код: {barcode_data}")
+    st.write(f"Отсканированный штрих-код: {barcode_data}")
