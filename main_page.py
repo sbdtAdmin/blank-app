@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit_app import login_page, register_page
+from login_page import login_page, register_page
 
 # Функция для отображения карточки товара
 def product_card(name, price, description):
