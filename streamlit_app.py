@@ -68,7 +68,7 @@ scanner_html = """
 """
 
 # Встраивание HTML с камерой на страницу Streamlit
-components.html(scanner_html, height=500, unsafe_allow_html=True)
+components.html(scanner_html, height=500)
 
 # Получение сообщения от JavaScript
 barcode = st.empty()
@@ -78,24 +78,25 @@ components.html("""
     window.addEventListener('message', (event) => {
         if (event.data.type === 'barcode') {
             const barcodeData = event.data.data;
-            window.parent.postMessage({ type: 'streamlit', data: barcodeData }, '*');
+            const streamlitData = JSON.stringify({data: barcodeData});
+            fetch("/record_barcode", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: streamlitData
+            });
         }
     });
 </script>
-""", height=0, unsafe_allow_html=True)
+""", height=0)
 
-# Встраиваемая функция для приема штрих-кода через JavaScript
-st.markdown("""
-<script>
-    window.addEventListener('message', function(event) {
-        if (event.data.type === 'streamlit') {
-            const barcode = event.data.data;
-            const streamlitData = JSON.stringify({data: barcode});
-            Streamlit.setComponentValue(streamlitData);
-        }
-    });
-</script>
-""", unsafe_allow_html=True)
+# Запрос POST для получения штрих-кода
+import json
+from streamlit.components.v1 import components
+
+def record_barcode():
+    st.write(st.experimental_get_query_params())
+
+components.serve_request_path('/record_barcode', record_barcode)
 
 # Вывод штрих-кода на страницу
 barcode_data = st.experimental_get_query_params().get('data', [''])[0]
