@@ -1,95 +1,32 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import base64
 
-st.title("Сканер штрих-кодов")
-
-# JavaScript код для отображения камеры и интерфейса сканера
-scanner_html = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barcode Scanner</title>
-    <style>
-        #video {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            border: 2px solid #000;
+# HTML и JS код для камеры и сканирования штрих-кодов
+camera_html = """
+<video id="preview"></video>
+<script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+<script type="text/javascript">
+    var scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+    scanner.addListener('scan', function (content) {
+        Streamlit.setComponentValue(content);
+    });
+    Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length > 0) {
+            scanner.start(cameras[0]);
+        } else {
+            console.error('No cameras found.');
         }
-        #scanner-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.7);
-            border: 5px solid rgba(255, 0, 0, 0.7);
-            box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        #scanner-overlay::before {
-            content: "";
-            display: block;
-            width: 100%;
-            height: 2px;
-            background: red;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-    </style>
-</head>
-<body>
-    <div style="position: relative;">
-        <video id="video" autoplay></video>
-        <div id="scanner-overlay"></div>
-    </div>
-    <form action="" method="GET">
-        <input type="hidden" name="barcode" id="barcode">
-    </form>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
-    <script>
-        const codeReader = new ZXing.BrowserBarcodeReader();
-        const videoElement = document.getElementById('video');
-
-        navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
-            videoElement.srcObject = stream;
-        }).catch((err) => {
-            console.error("Ошибка доступа к камере: ", err);
-        });
-
-        function scanCode() {
-            codeReader.decodeFromVideoDevice(undefined, 'video', (result, err) => {
-                if (result) {
-                    console.log("Штрих-код найден: ", result.text);
-                    document.getElementById('barcode').value = result.text;
-                    document.forms[0].submit();
-                }
-                if (err) {
-                    console.error("Ошибка при сканировании штрих-кода: ", err);
-                    // Продолжаем попытки сканирования
-                    requestAnimationFrame(scanCode);
-                }
-            });
-        }
-
-        // Запуск сканирования
-        scanCode();
-    </script>
-</body>
-</html>
+    }).catch(function (e) {
+        console.error(e);
+    });
+</script>
 """
 
-# Встраивание HTML с камерой на страницу Streamlit
-components.html(scanner_html, height=500)
+st.markdown(camera_html, unsafe_allow_html=True)
 
-# Получение данных из формы
-barcode_data = st.experimental_get_query_params().get('barcode', [''])[0]
+# Получение данных штрих-кода
+barcode_data = st.text_input("Сканированный штрих-код:")
+
 if barcode_data:
-    st.write(f"Отсканированный штрих-код: {barcode_data}")
-else:
-    st.write("Штрих-код не распознан. Попробуйте еще раз.")
+    st.success(f"Штрих-код распознан: {barcode_data}")
+    # Логика добавления товара на склад по распознанному штрих-коду
