@@ -62,16 +62,23 @@ scanner_html = """
             console.error("Ошибка доступа к камере: ", err);
         });
 
-        codeReader.decodeFromVideoDevice(undefined, 'video', (result, err) => {
-            if (result) {
-                console.log("Штрих-код найден: ", result.text);
-                document.getElementById('barcode').value = result.text;
-                document.forms[0].submit();
-            }
-            if (err) {
-                console.error("Ошибка при сканировании штрих-кода: ", err);
-            }
-        });
+        function scanCode() {
+            codeReader.decodeFromVideoDevice(undefined, 'video', (result, err) => {
+                if (result) {
+                    console.log("Штрих-код найден: ", result.text);
+                    document.getElementById('barcode').value = result.text;
+                    document.forms[0].submit();
+                }
+                if (err) {
+                    console.error("Ошибка при сканировании штрих-кода: ", err);
+                    // Продолжаем попытки сканирования
+                    requestAnimationFrame(scanCode);
+                }
+            });
+        }
+
+        // Запуск сканирования
+        scanCode();
     </script>
 </body>
 </html>
